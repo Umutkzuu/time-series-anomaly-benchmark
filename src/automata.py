@@ -4,112 +4,84 @@ import warnings
 warnings.filterwarnings('ignore')
 
 def apply_paa(ts, window_size):
-    """Sürekli zaman serisini parçalara bölerek ortalamasını alır ve sıkıştırır."""
     ts = ts.flatten()
-    n = len(ts)
-    remainder = n % window_size
-    if remainder != 0:
-        ts = ts[:-remainder]
-    ts_reshaped = ts.reshape(-1, window_size)
-    return ts_reshaped.mean(axis=1)
+    remainder = len(ts) % window_size
+    if remainder != 0: ts = ts[:-remainder]
+    return ts.reshape(-1, window_size).mean(axis=1)
 
 def apply_sax(paa_ts, alphabet_size):
-    """Sıkıştırılmış değerleri Normal Dağılıma göre harflere çevirir."""
     alphabet = [chr(97 + i) for i in range(alphabet_size)]
     breakpoints = norm.ppf(np.linspace(1./alphabet_size, 1 - 1./alphabet_size, alphabet_size - 1))
-    
-    sax_symbols = []
-    for val in paa_ts:
-        idx = np.searchsorted(breakpoints, val)
-        sax_symbols.append(alphabet[idx])
-    return sax_symbols
-
-# --- YENİ EKLENEN: OLASILIKSAL OTOMATA (MARKOV ZİNCİRİ) ---
+    return [alphabet[np.searchsorted(breakpoints, val)] for val in paa_ts]
 
 def build_transition_matrix(sax_sequence, alphabet_size):
-    """
-    Eğitim verisindeki harf dizilimini (örn: a->b) sayarak Geçiş Matrisi oluşturur.
-    """
-    # Sıfıra bölme hatasını ve "sonsuz anomali" bug'ını önlemek için matrisi 
-    # 0 yerine çok küçük bir sayı (epsilon) ile başlatıyoruz (Laplace Smoothing)
     epsilon = 1e-6
     matrix = np.full((alphabet_size, alphabet_size), epsilon)
-    
     char_to_idx = {chr(97 + i): i for i in range(alphabet_size)}
-    
-    # Dizideki ardışık harf çiftlerini say
     for i in range(len(sax_sequence) - 1):
-        current_state = char_to_idx[sax_sequence[i]]
-        next_state = char_to_idx[sax_sequence[i+1]]
-        matrix[current_state, next_state] += 1
-        
-    # Satırları toplayıp olasılıklara (0 ile 1 arasına) çevir
-    row_sums = matrix.sum(axis=1, keepdims=True)
-    transition_probs = matrix / row_sums
-    
-    return transition_probs
-
-def calculate_anomaly_score(sax_sequence, transition_matrix, alphabet_size):
-    """
-    Test verisindeki harf geçişlerinin olasılığına bakar.
-    Matriste hiç görülmemiş/nadir bir geçiş yapılmışsa anomali skoru yükselir.
-    """
-    char_to_idx = {chr(97 + i): i for i in range(alphabet_size)}
-    scores = []
-    
-    for i in range(len(sax_sequence) - 1):
-        current_state = char_to_idx[sax_sequence[i]]
-        next_state = char_to_idx[sax_sequence[i+1]]
-        
-        # Bu geçişin olasılığı nedir?
-        prob = transition_matrix[current_state, next_state]
-        
-        # Olasılık ne kadar düşükse, anomali skoru o kadar yüksek olur (-log(P))
-        score = -np.log(prob)
-        scores.append(score)
-        
-    # Toplam dizinin ortalama anomali skorunu döndür
-    return np.mean(scores) if scores else 0.0
+        matrix[char_to_idx[sax_sequence[i]], char_to_idx[sax_sequence[i+1]]] += 1
+    return matrix / matrix.sum(axis=1, keepdims=True)
 
 def get_sequence_scores(sax_sequence, transition_matrix, alphabet_size):
-    """
-    Tüm dizinin ortalamasını almak yerine, her bir harf geçişi için
-    ayrı ayrı anomali skoru üretip bir dizi (array) olarak döndürür.
-    """
     char_to_idx = {chr(97 + i): i for i in range(alphabet_size)}
-    # İlk harfe giden bir geçiş olmadığı için onun skorunu 0 kabul ediyoruz
-    scores = [0.0] 
-    
+    scores = [0.0]
     for i in range(len(sax_sequence) - 1):
-        current_state = char_to_idx[sax_sequence[i]]
-        next_state = char_to_idx[sax_sequence[i+1]]
-        
-        prob = transition_matrix[current_state, next_state]
+        prob = transition_matrix[char_to_idx[sax_sequence[i]], char_to_idx[sax_sequence[i+1]]]
         scores.append(-np.log(prob))
-        
     return np.array(scores)
 
+# --- RUBRİK GÜNCELLEMESİ: LEVENSHTEIN (UNSEEN DATA) YÖNETİMİ ---
+
+def levenshtein_distance(s1, s2):
+    """İki SAX kelimesi (pattern) arasındaki harf değişim mesafesini hesaplar."""
+    if len(s1) < len(s2): return levenshtein_distance(s2, s1)
+    if len(s2) == 0: return len(s1)
+    prev_row = range(len(s2) + 1)
+    for i, c1 in enumerate(s1):
+        curr_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            insertions = prev_row[j + 1] + 1
+            deletions = curr_row[j] + 1
+            substitutions = prev_row[j] + (c1 != c2)
+            curr_row.append(min(insertions, deletions, substitutions))
+        prev_row = curr_row
+    return prev_row[-1]
+
+def extract_patterns(sax_seq, length):
+    """SAX dizisinden n-uzunluğunda kelimeler (pattern) çıkarır."""
+    return ["".join(sax_seq[i:i+length]) for i in range(len(sax_seq) - length + 1)]
+
+def evaluate_unseen_patterns(train_seq, test_seq, pattern_length=3):
+    """
+    Test verisindeki kelimeleri eğitim verisiyle kıyaslar. Unseen (görülmemiş) 
+    kelimelerin en yakın bilinen kelimeye olan Levenshtein mesafesini döndürür.
+    """
+    train_patterns = set(extract_patterns(train_seq, pattern_length))
+    test_patterns = extract_patterns(test_seq, pattern_length)
+    
+    unseen_distances = []
+    for pattern in test_patterns:
+        if pattern not in train_patterns:
+            # En yakın bilinen kelimeye olan uzaklığı bul
+            min_dist = min(levenshtein_distance(pattern, tp) for tp in train_patterns)
+            unseen_distances.append((pattern, min_dist))
+    return unseen_distances
 
 if __name__ == "__main__":
-    print("--- OLASILIKSAL OTOMATA TESTİ ---\n")
+    print("--- LEVENSHTEIN BİRİM TESTİ (UNIT TEST) ---")
     
-    a_size = 3  # Alfabemiz: a, b, c
+    # Eğitim setinde sistem sadece "aba", "bab", "abc" kelimelerini gördü.
+    train_dummy = ['a', 'b', 'a', 'b', 'c'] 
     
-    # 1. Eğitim Aşaması: Sistem hep a->b, b->c, c->a akışını görüyor
-    train_sax = ['a', 'b', 'c', 'a', 'b', 'c', 'a', 'b', 'c']
-    print(f"Eğitim Dizisi: {train_sax}")
+    # Test sırasında siber saldırı oldu ve "adc" diye tamamen yabancı (Unseen) bir kelime geldi.
+    test_dummy = ['a', 'd', 'c'] 
     
-    t_matrix = build_transition_matrix(train_sax, alphabet_size=a_size)
-    print("\nÖğrenilen Geçiş Matrisi (Satırlar: a,b,c -> Sütunlar: a,b,c):")
-    print(np.round(t_matrix, 2))
+    print(f"Eğitim Setindeki Kelimeler: {set(extract_patterns(train_dummy, 3))}")
+    print(f"Test Setine Gelen Şüpheli Kelime: {''.join(test_dummy)}")
     
-    # 2. Test Aşaması (Normal Akış)
-    test_normal = ['a', 'b', 'c', 'a', 'b']
-    score_normal = calculate_anomaly_score(test_normal, t_matrix, a_size)
-    print(f"\nNormal Test Dizisi Skoru : {score_normal:.4f} (Beklenen: Çok Düşük)")
+    distances = evaluate_unseen_patterns(train_dummy, test_dummy, pattern_length=3)
     
-    # 3. Test Aşaması (Anormal Akış - Siber Saldırı)
-    # Birdenbire kaotik geçişler oluyor: a->c, c->c, c->b
-    test_anomaly = ['a', 'c', 'c', 'b', 'a']
-    score_anomaly = calculate_anomaly_score(test_anomaly, t_matrix, a_size)
-    print(f"Anormal Test Dizisi Skoru: {score_anomaly:.4f} (Beklenen: ÇOK YÜKSEK!)")
+    for pattern, dist in distances:
+        print(f"Unseen Pattern Tespit Edildi: '{pattern}' | Bilinen en yakın kelimeye Levenshtein Uzaklığı: {dist}")
+        if dist > 1:
+            print("=> SONUÇ: Yüksek Risk (Büyük Morfolojik Sıçrama, Sisteme Saldırı Olabilir!)")
