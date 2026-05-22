@@ -71,6 +71,25 @@ def calculate_anomaly_score(sax_sequence, transition_matrix, alphabet_size):
     # Toplam dizinin ortalama anomali skorunu döndür
     return np.mean(scores) if scores else 0.0
 
+def get_sequence_scores(sax_sequence, transition_matrix, alphabet_size):
+    """
+    Tüm dizinin ortalamasını almak yerine, her bir harf geçişi için
+    ayrı ayrı anomali skoru üretip bir dizi (array) olarak döndürür.
+    """
+    char_to_idx = {chr(97 + i): i for i in range(alphabet_size)}
+    # İlk harfe giden bir geçiş olmadığı için onun skorunu 0 kabul ediyoruz
+    scores = [0.0] 
+    
+    for i in range(len(sax_sequence) - 1):
+        current_state = char_to_idx[sax_sequence[i]]
+        next_state = char_to_idx[sax_sequence[i+1]]
+        
+        prob = transition_matrix[current_state, next_state]
+        scores.append(-np.log(prob))
+        
+    return np.array(scores)
+
+
 if __name__ == "__main__":
     print("--- OLASILIKSAL OTOMATA TESTİ ---\n")
     
