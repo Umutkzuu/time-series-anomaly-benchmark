@@ -35,7 +35,7 @@ def run_automata_pipeline(dataset_name, X_train_pca, X_test_pca, y_train, y_test
     
     train_patterns = set(automata.extract_patterns(sax_train, a_cfg["pattern_length"]))
     unseen_data = automata.evaluate_unseen_patterns(sax_train, sax_test, a_cfg["pattern_length"])
-    unseen_dict = {p[0]: (p[1], p[2]) for p in unseen_data} 
+    unseen_dict = {p[0]: (p[1], p[2]) for p in unseen_data}
     
     json_reports = []
     for idx, (score, pred) in enumerate(zip(test_scores, y_pred)):
@@ -52,8 +52,8 @@ def run_automata_pipeline(dataset_name, X_train_pca, X_test_pca, y_train, y_test
                 "pattern": pattern,
                 "status": status,
                 "mapped_to": mapped_to,
-                "levenshtein_distance": lev_dist, 
-                "probability": float(np.exp(-score)), 
+                "levenshtein_distance": lev_dist,
+                "probability": float(np.exp(-score)),
                 "decision": "anomaly",
                 "confidence": automata.calculate_confidence(score, threshold)
             }
@@ -63,13 +63,15 @@ def run_automata_pipeline(dataset_name, X_train_pca, X_test_pca, y_train, y_test
         "F1": f1_score(y_test_compressed, y_pred, zero_division=0),
         "Precision": precision_score(y_test_compressed, y_pred, zero_division=0),
         "Recall": recall_score(y_test_compressed, y_pred, zero_division=0),
-        "Reports": json_reports[:3] 
+        "Reports": json_reports[:3]
     }
 
 def run_dl_pipeline(model_class, X_train, y_train, X_val, y_val, X_test, y_test, cfg):
-    """Derin Öğrenme boru hattı (Seed ortalamaları ve Early Stopping entegreli)."""
+    """Derin Öğrenme boru hattı (Dinamik feature boyutu ve 5 Seed tekrarı)."""
     dl_cfg = cfg["dl_params"]
     seq_length, batch_size = dl_cfg["seq_length"], dl_cfg["batch_size"]
+    
+    input_features = X_train.shape[1]
     
     X_train_dl, y_train_dl = deep_learning.create_sequences(X_train, y_train, seq_length)
     X_val_dl, y_val_dl = deep_learning.create_sequences(X_val, y_val, seq_length)
@@ -85,9 +87,9 @@ def run_dl_pipeline(model_class, X_train, y_train, X_val, y_val, X_test, y_test,
         deep_learning.set_seed(seed)
         
         if model_class == deep_learning.TimeSeriesCNN:
-            model = model_class(input_features=1, seq_length=seq_length, hidden_size=dl_cfg["hidden_size"])
+            model = model_class(input_features=input_features, seq_length=seq_length, hidden_size=dl_cfg["hidden_size"])
         else:
-            model = model_class(input_features=1, hidden_size=dl_cfg["hidden_size"], num_layers=dl_cfg["num_layers"])
+            model = model_class(input_features=input_features, hidden_size=dl_cfg["hidden_size"], num_layers=dl_cfg["num_layers"])
             
         model = deep_learning.train_model(model, train_loader, val_loader, cfg)
         f1, _, _ = deep_learning.evaluate_model(model, test_loader)
@@ -96,7 +98,6 @@ def run_dl_pipeline(model_class, X_train, y_train, X_val, y_val, X_test, y_test,
     return {"F1_Avg": np.mean(f1_scores), "F1_Std": np.std(f1_scores)}
 
 def run_parameter_grid(X_train_pca, X_test_pca, y_train, y_test, cfg):
-    """Rubrik Gereksinimi: Window Size ve Alphabet Size grid analizi."""
     results = []
     for w in cfg["automata_params"]["window_size_grid"]:
         for a in cfg["automata_params"]["alphabet_size_grid"]:
@@ -108,7 +109,6 @@ def run_parameter_grid(X_train_pca, X_test_pca, y_train, y_test, cfg):
     return results
 
 def run_noise_experiment(X_train_pca, X_test_pca, y_train, y_test, cfg):
-    """GÜNCELLENDİ: Rubrik Gereksinimi Gaussian Noise senaryosu ve Automata Testi."""
     noise = np.random.normal(0, cfg["experiment_params"]["noise_std"], size=X_test_pca.shape)
     X_test_noisy = X_test_pca + noise
     return run_automata_pipeline("NOISE", X_train_pca, X_test_noisy, y_train, y_test, cfg)

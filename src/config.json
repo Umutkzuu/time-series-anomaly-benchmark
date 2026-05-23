@@ -1,7 +1,7 @@
 {
   "data_paths": {
-    "batadal_file": "data/BATADAL/BATADAL_dataset04.csv",
-    "skab_base_dir": "data/SKAB"
+    "batadal_file": "../data/BATADAL/BATADAL_dataset04.csv",
+    "skab_base_dir": "../data/SKAB"
   },
   "batadal_params": {
     "target_col": "ATT_FLAG",
