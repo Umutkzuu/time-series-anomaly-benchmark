@@ -1,13 +1,16 @@
 {
+  "data_paths": {
+    "batadal_file": "data/BATADAL/BATADAL_dataset04.csv",
+    "skab_base_dir": "data/SKAB"
+  },
   "batadal_params": {
-    "data_path": "data/BATADAL/BATADAL_dataset04.csv",
     "target_col": "ATT_FLAG",
     "drop_time_cols": ["DATETIME"]
   },
   "skab_params": {
-    "data_path": "data/SKAB",
+    "folders": ["valve1", "valve2"],
     "target_col": "anomaly",
-    "drop_cols": ["datetime", "changepoint"]
+    "drop_cols": ["datetime", "changepoint", "source_group", "source_file"]
   },
   "automata_params": {
     "window_size": 3,
