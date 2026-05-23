@@ -9,20 +9,21 @@ warnings.filterwarnings('ignore')
 
 def main():
     print("1. Konfigürasyon ve Veriler Yükleniyor...\n")
-    with open("src/config.json", "r") as f:
-        cfg = json.load(f)
+    
+    cfg = data_loader.load_config()
         
-    # BATADAL Veri Seti Yükleme ve Ön İşleme
+   
+    
     batadal_df = data_loader.load_batadal_data(cfg)
-    res_batadal = preprocessing.prep_batadal(batadal_df, cfg)
+    res = preprocessing.prep_batadal(batadal_df, cfg)
     
-    X_train_pca = res_batadal["pca"][0]
-    X_val_pca = res_batadal["pca"][1]
-    X_test_pca = res_batadal["pca"][2]
+    X_train_pca = res["pca"][0]
+    X_val_pca = res["pca"][1]
+    X_test_pca = res["pca"][2]
     
-    y_train = res_batadal["y"][0]
-    y_val = res_batadal["y"][1]
-    y_test = res_batadal["y"][2]
+    y_train = res["y"][0]
+    y_val = res["y"][1]
+    y_test = res["y"][2]
     
     print("="*60)
     print(" BÖLÜM 1: OLASILIKSAL OTOMATA (EXPLAINABILITY) ")
@@ -32,13 +33,12 @@ def main():
     
     print("\n--- JSON Açıklanabilirlik Raporları (İlk 3 Anomali) ---")
     for report in auto_res['Reports']:
-        # ASCII karakterlerini devre dışı bırakıp temiz bir JSON çıktısı basıyoruz
         print(json.dumps(report, indent=4, ensure_ascii=False))
         
     print("\n" + "="*60)
     print(" BÖLÜM 2: DERİN ÖĞRENME (5 SEED ORTALAMASI) ")
     print("="*60)
-    # DL modelleri için etiketleri 0 ve 1'e sabitleme
+    
     y_train_dl = (y_train == 1).astype(int)
     y_val_dl = (y_val == 1).astype(int)
     y_test_dl = (y_test == 1).astype(int)
