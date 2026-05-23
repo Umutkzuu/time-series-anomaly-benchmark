@@ -33,19 +33,18 @@ def run_automata_pipeline(dataset_name, X_train_pca, X_test_pca, y_train, y_test
     test_scores = automata.get_sequence_scores(sax_test, t_matrix, a_size)
     y_pred = (test_scores > threshold).astype(int)
     
-    # Unseen (Görülmemiş) Pattern Analizi
     train_patterns = set(automata.extract_patterns(sax_train, a_cfg["pattern_length"]))
     unseen_data = automata.evaluate_unseen_patterns(sax_train, sax_test, a_cfg["pattern_length"])
-    unseen_dict = {p[0]: p[1] for p in unseen_data} # {pattern: mapped_to}
+    unseen_dict = {p[0]: (p[1], p[2]) for p in unseen_data} 
     
-    # Rubrik Gereksinimi: JSON Açıklanabilirlik Raporu Üretimi
     json_reports = []
     for idx, (score, pred) in enumerate(zip(test_scores, y_pred)):
         if pred == 1:
             start_idx = max(0, idx - a_cfg["pattern_length"] + 1)
             pattern = "".join(sax_test[start_idx:idx+1])
             status = "unseen" if pattern not in train_patterns else "seen"
-            mapped_to = unseen_dict.get(pattern, pattern)
+            
+            mapped_to, lev_dist = unseen_dict.get(pattern, (pattern, 0))
             
             report = {
                 "time_step": idx,
@@ -53,7 +52,8 @@ def run_automata_pipeline(dataset_name, X_train_pca, X_test_pca, y_train, y_test
                 "pattern": pattern,
                 "status": status,
                 "mapped_to": mapped_to,
-                "probability": float(np.exp(-score)), # Score negatif logaritmaydı, olasılığa (0-1) geri çeviriyoruz
+                "levenshtein_distance": lev_dist, 
+                "probability": float(np.exp(-score)), 
                 "decision": "anomaly",
                 "confidence": automata.calculate_confidence(score, threshold)
             }
@@ -63,7 +63,7 @@ def run_automata_pipeline(dataset_name, X_train_pca, X_test_pca, y_train, y_test
         "F1": f1_score(y_test_compressed, y_pred, zero_division=0),
         "Precision": precision_score(y_test_compressed, y_pred, zero_division=0),
         "Recall": recall_score(y_test_compressed, y_pred, zero_division=0),
-        "Reports": json_reports[:3] # Raporu şişirmemek için ilk 3 anomalinin analizini döndür
+        "Reports": json_reports[:3] 
     }
 
 def run_dl_pipeline(model_class, X_train, y_train, X_val, y_val, X_test, y_test, cfg):
@@ -81,7 +81,6 @@ def run_dl_pipeline(model_class, X_train, y_train, X_val, y_val, X_test, y_test,
     
     f1_scores = []
     
-    # Rubrik Gereksinimi: 5 farklı Seed ile deney tekrarı
     for seed in dl_cfg["random_seeds"]:
         deep_learning.set_seed(seed)
         
@@ -108,7 +107,8 @@ def run_parameter_grid(X_train_pca, X_test_pca, y_train, y_test, cfg):
             results.append({"w_size": w, "a_size": a, "F1": res["F1"]})
     return results
 
-def run_noise_experiment(X_test_pca, cfg):
-    """Rubrik Gereksinimi: Gaussian Noise senaryosu."""
+def run_noise_experiment(X_train_pca, X_test_pca, y_train, y_test, cfg):
+    """GÜNCELLENDİ: Rubrik Gereksinimi Gaussian Noise senaryosu ve Automata Testi."""
     noise = np.random.normal(0, cfg["experiment_params"]["noise_std"], size=X_test_pca.shape)
-    return X_test_pca + noise
+    X_test_noisy = X_test_pca + noise
+    return run_automata_pipeline("NOISE", X_train_pca, X_test_noisy, y_train, y_test, cfg)
