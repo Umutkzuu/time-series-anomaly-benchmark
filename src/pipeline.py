@@ -14,38 +14,28 @@ def compress_labels(y, window_size):
     return y_clean.reshape(-1, window_size).max(axis=1)
 
 def run_automata_pipeline(dataset_name, X_train_pca, X_test_pca, y_train, y_test, cfg):
-    """Olasılıksal Otomata boru hattı ve Açıklanabilirlik Raporu (JSON) üretimi."""
     a_cfg = cfg["automata_params"]
     w_size, a_size = a_cfg["window_size"], a_cfg["alphabet_size"]
-    
     y_test_compressed = compress_labels((y_test == 1).astype(int), w_size)
-    
     paa_train = automata.apply_paa(X_train_pca, w_size)
     paa_test = automata.apply_paa(X_test_pca, w_size)
-    
     sax_train = automata.apply_sax(paa_train, a_size)
     sax_test = automata.apply_sax(paa_test, a_size)
-    
     t_matrix = automata.build_transition_matrix(sax_train, a_size)
     train_scores = automata.get_sequence_scores(sax_train, t_matrix, a_size)
     threshold = np.percentile(train_scores, a_cfg["threshold_percentile"])
-    
     test_scores = automata.get_sequence_scores(sax_test, t_matrix, a_size)
     y_pred = (test_scores > threshold).astype(int)
-    
     train_patterns = set(automata.extract_patterns(sax_train, a_cfg["pattern_length"]))
     unseen_data = automata.evaluate_unseen_patterns(sax_train, sax_test, a_cfg["pattern_length"])
     unseen_dict = {p[0]: (p[1], p[2]) for p in unseen_data}
-    
     json_reports = []
     for idx, (score, pred) in enumerate(zip(test_scores, y_pred)):
         if pred == 1:
             start_idx = max(0, idx - a_cfg["pattern_length"] + 1)
             pattern = "".join(sax_test[start_idx:idx+1])
             status = "unseen" if pattern not in train_patterns else "seen"
-            
             mapped_to, lev_dist = unseen_dict.get(pattern, (pattern, 0))
-            
             report = {
                 "time_step": idx,
                 "state": "".join(sax_test[max(0, start_idx-1):start_idx]),
@@ -58,7 +48,6 @@ def run_automata_pipeline(dataset_name, X_train_pca, X_test_pca, y_train, y_test
                 "confidence": automata.calculate_confidence(score, threshold)
             }
             json_reports.append(report)
-
     return {
         "F1": f1_score(y_test_compressed, y_pred, zero_division=0),
         "Precision": precision_score(y_test_compressed, y_pred, zero_division=0),
@@ -67,34 +56,30 @@ def run_automata_pipeline(dataset_name, X_train_pca, X_test_pca, y_train, y_test
     }
 
 def run_dl_pipeline(model_class, X_train, y_train, X_val, y_val, X_test, y_test, cfg):
-    """Derin Öğrenme boru hattı (Dinamik feature boyutu ve 5 Seed tekrarı)."""
     dl_cfg = cfg["dl_params"]
     seq_length, batch_size = dl_cfg["seq_length"], dl_cfg["batch_size"]
-    
     input_features = X_train.shape[1]
-    
+    neg_count = (y_train == 0).sum()
+    pos_count = (y_train == 1).sum()
+    pos_weight_val = float(neg_count / (pos_count + 1e-9))
+    cfg_copy = copy.deepcopy(cfg)
+    cfg_copy["dl_params"]["pos_weight"] = pos_weight_val
     X_train_dl, y_train_dl = deep_learning.create_sequences(X_train, y_train, seq_length)
     X_val_dl, y_val_dl = deep_learning.create_sequences(X_val, y_val, seq_length)
     X_test_dl, y_test_dl = deep_learning.create_sequences(X_test, y_test, seq_length)
-    
     train_loader = DataLoader(TensorDataset(X_train_dl, y_train_dl), batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(TensorDataset(X_val_dl, y_val_dl), batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(TensorDataset(X_test_dl, y_test_dl), batch_size=batch_size, shuffle=False)
-    
     f1_scores = []
-    
     for seed in dl_cfg["random_seeds"]:
         deep_learning.set_seed(seed)
-        
         if model_class == deep_learning.TimeSeriesCNN:
             model = model_class(input_features=input_features, seq_length=seq_length, hidden_size=dl_cfg["hidden_size"])
         else:
             model = model_class(input_features=input_features, hidden_size=dl_cfg["hidden_size"], num_layers=dl_cfg["num_layers"])
-            
-        model = deep_learning.train_model(model, train_loader, val_loader, cfg)
+        model = deep_learning.train_model(model, train_loader, val_loader, cfg_copy)
         f1, _, _ = deep_learning.evaluate_model(model, test_loader)
         f1_scores.append(f1)
-        
     return {"F1_Avg": np.mean(f1_scores), "F1_Std": np.std(f1_scores)}
 
 def run_parameter_grid(X_train_pca, X_test_pca, y_train, y_test, cfg):
