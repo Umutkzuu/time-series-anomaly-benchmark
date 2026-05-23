@@ -2,9 +2,9 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-from sklearn.model_selection import GroupKFold # RUBRİK GÜNCELLEMESİ
+from sklearn.model_selection import GroupKFold
 from sklearn.feature_selection import VarianceThreshold
-import data_loader
+import data_loader  
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -13,9 +13,7 @@ def prep_batadal(df, config):
     drop_cols = config["batadal_params"]["drop_time_cols"]
     
     df_features = df.drop(columns=drop_cols + [target_col], errors='ignore')
-    df_features = df_features.replace([np.inf, -np.inf], np.nan)
-    df_features = df_features.apply(pd.to_numeric, errors='coerce')
-    df_features = df_features.ffill().bfill().fillna(0)
+    df_features = df_features.replace([np.inf, -np.inf], np.nan).apply(pd.to_numeric, errors='coerce').ffill().bfill().fillna(0)
     
     X = df_features.values.astype(np.float64)
     y = df[target_col].values
@@ -46,27 +44,24 @@ def prep_batadal(df, config):
     return {
         "scaled": (X_train_scaled, X_val_scaled, X_test_scaled),
         "pca": (X_train_pca, X_val_pca, X_test_pca),
-        "y": (y_train, y_val, y_test)
+        "y": (y_train, y_val, y_test),
+        "transformers": {"selector": selector, "scaler": scaler, "pca": pca}
     }
 
 def prep_skab(df, config):
     target_col = config["skab_params"]["target_col"]
     drop_cols = config["skab_params"]["drop_cols"]
-    groups = df['source_file'].values
+    groups = df['source_file'].values if 'source_file' in df.columns else np.zeros(len(df))
     
     df_features = df.drop(columns=drop_cols + [target_col], errors='ignore')
-    df_features = df_features.replace([np.inf, -np.inf], np.nan)
-    df_features = df_features.apply(pd.to_numeric, errors='coerce')
-    df_features = df_features.ffill().bfill().fillna(0)
+    df_features = df_features.replace([np.inf, -np.inf], np.nan).apply(pd.to_numeric, errors='coerce').ffill().bfill().fillna(0)
     
     X = df_features.values.astype(np.float64)
     y = df[target_col].values
     
-    # RUBRİK İSTERİ: GroupKFold (5'e bölüp 60-20-20 oranını yakalama)
     gkf = GroupKFold(n_splits=5)
     folds = list(gkf.split(X, y, groups))
     
-    # 5 Fold'un 3'ü Train (%60), 1'i Val (%20), 1'i Test (%20)
     train_idx = np.concatenate([folds[0][1], folds[1][1], folds[2][1]])
     val_idx = folds[3][1]
     test_idx = folds[4][1]
@@ -93,5 +88,6 @@ def prep_skab(df, config):
     return {
         "scaled": (X_train_scaled, X_val_scaled, X_test_scaled),
         "pca": (X_train_pca, X_val_pca, X_test_pca),
-        "y": (y_train, y_val, y_test)
+        "y": (y_train, y_val, y_test),
+        "transformers": {"selector": selector, "scaler": scaler, "pca": pca}
     }
