@@ -24,16 +24,14 @@ def build_transition_matrix(sax_sequence, alphabet_size):
 
 def get_sequence_scores(sax_sequence, transition_matrix, alphabet_size):
     char_to_idx = {chr(97 + i): i for i in range(alphabet_size)}
+    
     scores = [0.0]
     for i in range(len(sax_sequence) - 1):
         prob = transition_matrix[char_to_idx[sax_sequence[i]], char_to_idx[sax_sequence[i+1]]]
         scores.append(-np.log(prob))
     return np.array(scores)
 
-# --- RUBRİK GÜNCELLEMESİ: LEVENSHTEIN (UNSEEN DATA) YÖNETİMİ ---
-
 def levenshtein_distance(s1, s2):
-    """İki SAX kelimesi (pattern) arasındaki harf değişim mesafesini hesaplar."""
     if len(s1) < len(s2): return levenshtein_distance(s2, s1)
     if len(s2) == 0: return len(s1)
     prev_row = range(len(s2) + 1)
@@ -48,53 +46,25 @@ def levenshtein_distance(s1, s2):
     return prev_row[-1]
 
 def extract_patterns(sax_seq, length):
-    """SAX dizisinden n-uzunluğunda kelimeler (pattern) çıkarır."""
     return ["".join(sax_seq[i:i+length]) for i in range(len(sax_seq) - length + 1)]
 
 def evaluate_unseen_patterns(train_seq, test_seq, pattern_length=3):
-    """
-    Test verisindeki kelimeleri eğitim verisiyle kıyaslar. Unseen (görülmemiş) 
-    kelimelerin en yakın bilinen kelimeye olan Levenshtein mesafesini döndürür.
-    """
-    train_patterns = set(extract_patterns(train_seq, pattern_length))
+    train_patterns = list(set(extract_patterns(train_seq, pattern_length)))
     test_patterns = extract_patterns(test_seq, pattern_length)
+    
+    if not train_patterns: return []
     
     unseen_distances = []
     for pattern in test_patterns:
         if pattern not in train_patterns:
-            # En yakın bilinen kelimeye olan uzaklığı bul
-            min_dist = min(levenshtein_distance(pattern, tp) for tp in train_patterns)
-            unseen_distances.append((pattern, min_dist))
+            distances = [(tp, levenshtein_distance(pattern, tp)) for tp in train_patterns]
+            nearest_pattern, min_dist = min(distances, key=lambda x: x[1])
+            unseen_distances.append((pattern, nearest_pattern, min_dist))
     return unseen_distances
 
 def calculate_confidence(score, threshold):
-    """
-    Anomali skorunun eşik değerine (threshold) olan uzaklığına bakarak
-    %50 ile %99.9 arasında bir güven skoru (confidence) üretir.
-    """
     if score >= threshold:
         confidence = 50 + ((score - threshold) / (threshold + 1e-6)) * 50
     else:
         confidence = 50 + ((threshold - score) / (threshold + 1e-6)) * 50
-        
-    return min(99.99, confidence) 
-
-
-if __name__ == "__main__":
-    print("--- LEVENSHTEIN BİRİM TESTİ (UNIT TEST) ---")
-    
-    # Eğitim setinde sistem sadece "aba", "bab", "abc" kelimelerini gördü.
-    train_dummy = ['a', 'b', 'a', 'b', 'c'] 
-    
-    # Test sırasında siber saldırı oldu ve "adc" diye tamamen yabancı (Unseen) bir kelime geldi.
-    test_dummy = ['a', 'd', 'c'] 
-    
-    print(f"Eğitim Setindeki Kelimeler: {set(extract_patterns(train_dummy, 3))}")
-    print(f"Test Setine Gelen Şüpheli Kelime: {''.join(test_dummy)}")
-    
-    distances = evaluate_unseen_patterns(train_dummy, test_dummy, pattern_length=3)
-    
-    for pattern, dist in distances:
-        print(f"Unseen Pattern Tespit Edildi: '{pattern}' | Bilinen en yakın kelimeye Levenshtein Uzaklığı: {dist}")
-        if dist > 1:
-            print("=> SONUÇ: Yüksek Risk (Büyük Morfolojik Sıçrama, Sisteme Saldırı Olabilir!)")
+    return min(99.99, confidence)
