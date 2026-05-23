@@ -6,8 +6,8 @@ import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score
 import warnings
 
-# Mac (Apple Silicon) ve diğer donanımlar için otomatik GPU tespiti
 DEVICE = torch.device("mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu")
+DECISION_THRESHOLD = 0.3  
 warnings.filterwarnings('ignore')
 
 def set_seed(seed):
@@ -16,6 +16,8 @@ def set_seed(seed):
     np.random.seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
+    if torch.backends.mps.is_available():
+        torch.mps.manual_seed(seed)  
 
 def create_sequences(X, y, seq_length):
     sequences, labels = [], []
@@ -64,16 +66,15 @@ def train_model(model, train_loader, val_loader, cfg):
     patience = dl_cfg["early_stopping_patience"]
     
     model = model.to(DEVICE)
-    # Sınıf dengesizliği (Imbalance) çözümü
     pos_weight = torch.tensor([10.0]).to(DEVICE)
     criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
     optimizer = optim.Adam(model.parameters(), lr=lr)
     
     best_val_loss = float('inf')
     patience_counter = 0
+    best_model_state = None  # EKLENDİ
     
     for epoch in range(epochs):
-        # --- EĞİTİM (TRAIN) ---
         model.train()
         for X_batch, y_batch in train_loader:
             optimizer.zero_grad()
@@ -82,7 +83,6 @@ def train_model(model, train_loader, val_loader, cfg):
             loss.backward()
             optimizer.step()
             
-        # --- DOĞRULAMA (VALIDATION) VE EARLY STOPPING ---
         model.eval()
         val_loss = 0
         with torch.no_grad():
@@ -92,17 +92,18 @@ def train_model(model, train_loader, val_loader, cfg):
         
         val_loss /= len(val_loader)
         
-        # Eğer loss düştüyse modeli kaydet (şart değil ama mantığını koruyoruz), sayacı sıfırla
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             patience_counter = 0
+            best_model_state = model.state_dict()  # EKLENDİ
         else:
-            # Loss düşmediyse sabır sayacını artır
             patience_counter += 1
             if patience_counter >= patience:
-                # Early Stopping tetiklendi!
                 break 
                 
+    if best_model_state:
+        model.load_state_dict(best_model_state)  # EKLENDİ
+        
     return model
 
 def evaluate_model(model, test_loader):
@@ -112,7 +113,7 @@ def evaluate_model(model, test_loader):
     with torch.no_grad():
         for X_batch, y_batch in test_loader:
             outputs = model(X_batch.to(DEVICE))
-            preds = (torch.sigmoid(outputs.squeeze()) > 0.3).int().cpu().numpy()
+            preds = (torch.sigmoid(outputs.squeeze()) > DECISION_THRESHOLD).int().cpu().numpy()  # GÜNCELLENDİ
             if preds.ndim == 0:
                 preds = [preds.item()]
                 y_batch = [y_batch.item()]
