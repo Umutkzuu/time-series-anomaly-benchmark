@@ -68,3 +68,25 @@ def calculate_confidence(score, threshold):
     else:
         confidence = 50 + ((threshold - score) / (threshold + 1e-6)) * 50
     return min(99.99, confidence)
+def get_transitions_and_path_prob(sax_window, transition_matrix, alphabet_size):
+    """
+    Verilen SAX penceresi (örn. ['d','a','e']) için:
+    - Ardışık durum geçişlerini ve olasılıklarını listeler
+    - Path probability = tüm geçiş olasılıklarının çarpımı
+    """
+    char_to_idx = {chr(97 + i): i for i in range(alphabet_size)}
+    transitions = []
+    path_prob = 1.0
+    for i in range(len(sax_window) - 1):
+        s_from = sax_window[i]
+        s_to   = sax_window[i + 1]
+        if s_from not in char_to_idx or s_to not in char_to_idx:
+            continue
+        prob = float(transition_matrix[char_to_idx[s_from], char_to_idx[s_to]])
+        transitions.append({
+            "from": s_from,
+            "to": s_to,
+            "probability": round(prob, 6)
+        })
+        path_prob *= prob
+    return transitions, round(float(path_prob), 10)
