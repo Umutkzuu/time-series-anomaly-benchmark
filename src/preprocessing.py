@@ -85,9 +85,14 @@ def prep_skab(df, config):
     X_val_pca = pca.transform(X_val_scaled)
     X_test_pca = pca.transform(X_test_scaled)
     
+
+    all_idx = np.concatenate([train_idx, val_idx, test_idx])
+    groups_aligned = groups[all_idx]
+
     return {
         "scaled": (X_train_scaled, X_val_scaled, X_test_scaled),
         "pca": (X_train_pca, X_val_pca, X_test_pca),
         "y": (y_train, y_val, y_test),
+        "groups": groups_aligned,
         "transformers": {"selector": selector, "scaler": scaler, "pca": pca}
     }
