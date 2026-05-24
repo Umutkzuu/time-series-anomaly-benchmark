@@ -75,7 +75,7 @@ def train_model(model, train_loader, val_loader, cfg):
         for X_batch, y_batch in train_loader:
             optimizer.zero_grad()
             outputs = model(X_batch.to(DEVICE))
-            loss = criterion(outputs.squeeze(), y_batch.to(DEVICE))
+            loss = criterion(outputs.view(-1), y_batch.to(DEVICE))
             loss.backward()
             optimizer.step()
         model.eval()
@@ -83,7 +83,7 @@ def train_model(model, train_loader, val_loader, cfg):
         with torch.no_grad():
             for X_val, y_val in val_loader:
                 out_val = model(X_val.to(DEVICE))
-                val_loss += criterion(out_val.squeeze(), y_val.to(DEVICE)).item()
+                val_loss += criterion(out_val.view(-1), y_val.to(DEVICE)).item()
         val_loss /= len(val_loader)
         if val_loss < best_val_loss:
             best_val_loss = val_loss
@@ -103,10 +103,7 @@ def evaluate_model(model, test_loader):
     with torch.no_grad():
         for X_batch, y_batch in test_loader:
             outputs = model(X_batch.to(DEVICE))
-            preds = (torch.sigmoid(outputs.squeeze()) > DECISION_THRESHOLD).int().cpu().numpy()
-            if preds.ndim == 0:
-                preds = [preds.item()]
-                y_batch = [y_batch.item()]
-            y_pred_list.extend(preds)
-            y_true.extend(y_batch.numpy())
+            preds = (torch.sigmoid(outputs.view(-1)) > DECISION_THRESHOLD).int().cpu().numpy()
+            y_pred_list.extend(preds.tolist())
+            y_true.extend(y_batch.numpy().tolist())
     return f1_score(y_true, y_pred_list, zero_division=0), precision_score(y_true, y_pred_list, zero_division=0), recall_score(y_true, y_pred_list, zero_division=0)
