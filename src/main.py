@@ -70,6 +70,31 @@ def main():
     print(f"-> Gürültülü Ortamda Otomata F1-Score: {noisy_res['F1']:.4f}")
 
     print("\n" + "="*60)
+    print(" BÖLÜM 4: SKAB VERİ SETİ - GroupKFold DEĞERLENDİRMESİ ")
+    print("="*60)
+    skab_df = data_loader.load_skab_data(cfg)
+    skab_res = preprocessing.prep_skab(skab_df, cfg)
+
+    anomali_skab = (skab_res["y"][0] == 1).sum() / len(skab_res["y"][0])
+    print(f"SKAB Train anomali oranı: {anomali_skab:.4f}")
+    print(f"SKAB Normal/Anomali oranı: {(1 - anomali_skab) / (anomali_skab + 1e-9):.1f}:1\n")
+
+    print("[ SKAB GroupKFold Pipeline Başlıyor... ]")
+    skab_pipeline_res = pipeline.run_skab_pipeline(skab_res, cfg)
+
+    n = skab_pipeline_res["n_folds"]
+    auto = skab_pipeline_res["automata"]
+    cnn  = skab_pipeline_res["cnn"]
+    gru  = skab_pipeline_res["gru"]
+
+    print(f"\n{'Model':<12} {'Fold Ort. F1':>14} {'Std':>8}  {'Fold Sonuçları'}")
+    print("-" * 60)
+    fold_str = lambda lst: "  ".join([f"{v:.4f}" for v in lst])
+    print(f"{'Automata':<12} {auto['F1_Avg']:>14.4f} {auto['F1_Std']:>8.4f}  {fold_str(auto['folds'])}")
+    print(f"{'1D-CNN':<12}  {cnn['F1_Avg']:>13.4f} {cnn['F1_Std']:>8.4f}  {fold_str(cnn['folds'])}")
+    print(f"{'GRU':<12}  {gru['F1_Avg']:>13.4f} {gru['F1_Std']:>8.4f}  {fold_str(gru['folds'])}")
+
+    print("\n" + "="*60)
     print(" PROJE BORU HATTI BAŞARIYLA TAMAMLANDI! ")
     print("="*60)
 
