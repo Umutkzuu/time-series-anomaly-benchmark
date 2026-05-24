@@ -4,6 +4,7 @@ import preprocessing
 import pipeline
 import deep_learning
 import warnings
+import visualize
 
 warnings.filterwarnings('ignore')
 
@@ -93,6 +94,67 @@ def main():
     print(f"{'Automata':<12} {auto['F1_Avg']:>14.4f} {auto['F1_Std']:>8.4f}  {fold_str(auto['folds'])}")
     print(f"{'1D-CNN':<12}  {cnn['F1_Avg']:>13.4f} {cnn['F1_Std']:>8.4f}  {fold_str(cnn['folds'])}")
     print(f"{'GRU':<12}  {gru['F1_Avg']:>13.4f} {gru['F1_Std']:>8.4f}  {fold_str(gru['folds'])}")
+
+    print("\n" + "="*60)
+    print(" BÖLÜM 5: GÖRSELLEŞTİRMELER ")
+    print("="*60)
+
+    import automata as automata_mod
+    import copy
+
+    a_cfg = cfg["automata_params"]
+    w_size, a_size = a_cfg["window_size"], a_cfg["alphabet_size"]
+
+    # --- BATADAL Confusion Matrix ---
+    print("Confusion Matrix üretiliyor (BATADAL - Automata)...")
+    visualize.plot_confusion_matrix(
+        auto_res["y_true"], auto_res["y_pred"],
+        dataset_name="BATADAL", model_name="Automata"
+    )
+
+    # --- BATADAL ROC / PR ---
+    print("ROC & Precision-Recall eğrisi üretiliyor (BATADAL - Automata)...")
+    visualize.plot_roc_pr(
+        auto_res["y_true"], auto_res["y_scores"],
+        dataset_name="BATADAL", model_name="Automata"
+    )
+
+    # --- Transition Heatmap ---
+    print("Transition heatmap üretiliyor (BATADAL)...")
+    visualize.plot_transition_heatmap(
+        auto_res["transition_matrix"], auto_res["alphabet_size"],
+        dataset_name="BATADAL"
+    )
+
+    # --- Automata State Diagram ---
+    print("State diagram üretiliyor (BATADAL)...")
+    visualize.plot_state_diagram(
+        auto_res["transition_matrix"], auto_res["alphabet_size"],
+        dataset_name="BATADAL"
+    )
+
+    # --- Parametre Duyarlılık ---
+    print("Parametre duyarlılık grafikleri üretiliyor (BATADAL)...")
+    visualize.plot_parameter_sensitivity(grid_results, dataset_name="BATADAL")
+
+    # --- Model Karşılaştırma (BATADAL) ---
+    print("Model karşılaştırma grafikleri üretiliyor...")
+    batadal_comparison = {
+        "Automata": {"F1": auto_res["F1"], "Std": 0.0},
+        "1D-CNN":   {"F1": cnn_res["F1_Avg"], "Std": cnn_res["F1_Std"]},
+        "GRU":      {"F1": gru_res["F1_Avg"], "Std": gru_res["F1_Std"]},
+    }
+    visualize.plot_model_comparison(batadal_comparison, dataset_name="BATADAL")
+
+    # --- Model Karşılaştırma (SKAB) ---
+    skab_comparison = {
+        "Automata": {"F1": skab_pipeline_res["automata"]["F1_Avg"], "Std": skab_pipeline_res["automata"]["F1_Std"]},
+        "1D-CNN":   {"F1": skab_pipeline_res["cnn"]["F1_Avg"],      "Std": skab_pipeline_res["cnn"]["F1_Std"]},
+        "GRU":      {"F1": skab_pipeline_res["gru"]["F1_Avg"],      "Std": skab_pipeline_res["gru"]["F1_Std"]},
+    }
+    visualize.plot_model_comparison(skab_comparison, dataset_name="SKAB")
+
+    print("\nTüm görseller outputs/figures/ klasörüne kaydedildi.")
 
     print("\n" + "="*60)
     print(" PROJE BORU HATTI BAŞARIYLA TAMAMLANDI! ")

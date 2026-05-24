@@ -57,7 +57,12 @@ def run_automata_pipeline(dataset_name, X_train_pca, X_test_pca, y_train, y_test
         "F1": f1_score(y_test_compressed, y_pred, zero_division=0),
         "Precision": precision_score(y_test_compressed, y_pred, zero_division=0),
         "Recall": recall_score(y_test_compressed, y_pred, zero_division=0),
-        "Reports": json_reports[:3]
+        "Reports": json_reports[:3],
+        "y_true": y_test_compressed,
+        "y_pred": y_pred,
+        "y_scores": test_scores,
+        "transition_matrix": t_matrix,
+        "alphabet_size": a_size,
     }
 
 def run_dl_pipeline(model_class, X_train, y_train, X_val, y_val, X_test, y_test, cfg):
