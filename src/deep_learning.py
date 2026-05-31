@@ -46,8 +46,8 @@ class TimeSeriesCNN(nn.Module):
 class TimeSeriesGRU(nn.Module):
     def __init__(self, input_features, hidden_size, num_layers):
         super(TimeSeriesGRU, self).__init__()
-        self.hidden_size = 32  # 64'ten küçülttük
-        self.num_layers = 1    # 2'den küçülttük
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
         self.gru = nn.GRU(input_features, self.hidden_size, self.num_layers, batch_first=True)
         self.dropout = nn.Dropout(0.1)
         self.fc = nn.Linear(self.hidden_size, 1)

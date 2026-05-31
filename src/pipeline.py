@@ -60,7 +60,7 @@ def run_automata_pipeline(dataset_name, X_train_pca, X_test_pca, y_train, y_test
         "Reports": json_reports[:3],
         "y_true": y_test_compressed,
         "y_pred": y_pred,
-        "y_scores": test_scores,
+        "y_scores": test_scores[:len(y_test_compressed)],
         "transition_matrix": t_matrix,
         "alphabet_size": a_size,
     }
@@ -90,7 +90,7 @@ def run_dl_pipeline(model_class, X_train, y_train, X_val, y_val, X_test, y_test,
         model = deep_learning.train_model(model, train_loader, val_loader, cfg_copy)
         f1, _, _ = deep_learning.evaluate_model(model, test_loader)
         f1_scores.append(f1)
-    return {"F1_Avg": np.mean(f1_scores), "F1_Std": np.std(f1_scores)}
+    return {"F1_Avg": np.mean(f1_scores), "F1_Std": np.std(f1_scores), "F1_Seeds": f1_scores}
 
 def run_parameter_grid(X_train_pca, X_test_pca, y_train, y_test, cfg):
     results = []

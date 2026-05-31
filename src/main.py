@@ -26,7 +26,6 @@ def main():
     y_val = res["y"][1]
     y_test = res["y"][2]
     
-    # --- TEŞHİS: Sınıf Dengesizliği Analizi ---
     print("\n--- VERİ SETİ ANALİZİ (CLASS IMBALANCE) ---")
     anomali_orani = (y_train == 1).sum() / len(y_train)
     print(f"Train anomali oranı: {anomali_orani:.4f}")
@@ -96,7 +95,68 @@ def main():
     print(f"{'GRU':<12}  {gru['F1_Avg']:>13.4f} {gru['F1_Std']:>8.4f}  {fold_str(gru['folds'])}")
 
     print("\n" + "="*60)
-    print(" BÖLÜM 5: GÖRSELLEŞTİRMELER ")
+    print(" BÖLÜM 5: İSTATİSTİKSEL ANALİZ (Wilcoxon Signed-Rank) ")
+    print("="*60)
+    from scipy.stats import wilcoxon
+
+    cnn_seeds = cnn_res["F1_Seeds"]
+    gru_seeds = gru_res["F1_Seeds"]
+
+    print(f"{'Model':<12} {'Seed F1 Listesi':<45} {'Ort':>6}")
+    print("-" * 70)
+    print(f"{'1D-CNN':<12} {str([round(v,4) for v in cnn_seeds]):<45} {cnn_res['F1_Avg']:.4f}")
+    print(f"{'GRU':<12} {str([round(v,4) for v in gru_seeds]):<45} {gru_res['F1_Avg']:.4f}")
+
+    print("\n[BATADAL] CNN vs GRU — Wilcoxon Signed-Rank Testi:")
+    try:
+        if len(set(x - y for x, y in zip(cnn_seeds, gru_seeds))) == 1:
+            print("  -> Tüm farklar aynı, Wilcoxon uygulanamaz (sıfır varyans).")
+        else:
+            stat, p = wilcoxon(cnn_seeds, gru_seeds)
+            print(f"  Statistic = {stat:.4f}, p-value = {p:.4f}")
+            if p < 0.05:
+                better = "1D-CNN" if cnn_res["F1_Avg"] > gru_res["F1_Avg"] else "GRU"
+                print(f"  -> p < 0.05: Fark istatistiksel olarak ANLAMLI. {better} daha iyi.")
+            else:
+                print("  -> p >= 0.05: Fark istatistiksel olarak ANLAMSIZ (modeller benzer).")
+    except Exception as e:
+        print(f"  -> Wilcoxon uygulanamadı: {e}")
+
+    skab_cnn_folds  = skab_pipeline_res["cnn"]["folds"]
+    skab_gru_folds  = skab_pipeline_res["gru"]["folds"]
+    skab_auto_folds = skab_pipeline_res["automata"]["folds"]
+
+    print("\n[SKAB] CNN vs GRU — Wilcoxon Signed-Rank Testi (fold bazlı):")
+    try:
+        if len(skab_cnn_folds) < 2 or len(set(x - y for x, y in zip(skab_cnn_folds, skab_gru_folds))) == 1:
+            print("  -> Yetersiz fold veya sıfır varyans, test uygulanamadı.")
+        else:
+            stat, p = wilcoxon(skab_cnn_folds, skab_gru_folds)
+            print(f"  Statistic = {stat:.4f}, p-value = {p:.4f}")
+            if p < 0.05:
+                better = "1D-CNN" if skab_pipeline_res["cnn"]["F1_Avg"] > skab_pipeline_res["gru"]["F1_Avg"] else "GRU"
+                print(f"  -> p < 0.05: Fark istatistiksel olarak ANLAMLI. {better} daha iyi.")
+            else:
+                print("  -> p >= 0.05: Fark istatistiksel olarak ANLAMSIZ.")
+    except Exception as e:
+        print(f"  -> Wilcoxon uygulanamadı: {e}")
+
+    print("\n[SKAB] DL (CNN ort.) vs Automata — Wilcoxon Signed-Rank Testi (fold bazlı):")
+    try:
+        if len(skab_auto_folds) < 2 or len(set(x - y for x, y in zip(skab_cnn_folds, skab_auto_folds))) == 1:
+            print("  -> Yetersiz fold veya sıfır varyans, test uygulanamadı.")
+        else:
+            stat, p = wilcoxon(skab_cnn_folds, skab_auto_folds)
+            print(f"  Statistic = {stat:.4f}, p-value = {p:.4f}")
+            if p < 0.05:
+                print("  -> p < 0.05: DL ve Automata arasındaki fark istatistiksel olarak ANLAMLI.")
+            else:
+                print("  -> p >= 0.05: Fark istatistiksel olarak ANLAMSIZ.")
+    except Exception as e:
+        print(f"  -> Wilcoxon uygulanamadı: {e}")
+
+    print("\n" + "="*60)
+    print(" BÖLÜM 6: GÖRSELLEŞTİRMELER ")
     print("="*60)
 
     import automata as automata_mod
@@ -105,39 +165,33 @@ def main():
     a_cfg = cfg["automata_params"]
     w_size, a_size = a_cfg["window_size"], a_cfg["alphabet_size"]
 
-    # --- BATADAL Confusion Matrix ---
     print("Confusion Matrix üretiliyor (BATADAL - Automata)...")
     visualize.plot_confusion_matrix(
         auto_res["y_true"], auto_res["y_pred"],
         dataset_name="BATADAL", model_name="Automata"
     )
 
-    # --- BATADAL ROC / PR ---
     print("ROC & Precision-Recall eğrisi üretiliyor (BATADAL - Automata)...")
     visualize.plot_roc_pr(
         auto_res["y_true"], auto_res["y_scores"],
         dataset_name="BATADAL", model_name="Automata"
     )
 
-    # --- Transition Heatmap ---
     print("Transition heatmap üretiliyor (BATADAL)...")
     visualize.plot_transition_heatmap(
         auto_res["transition_matrix"], auto_res["alphabet_size"],
         dataset_name="BATADAL"
     )
 
-    # --- Automata State Diagram ---
     print("State diagram üretiliyor (BATADAL)...")
     visualize.plot_state_diagram(
         auto_res["transition_matrix"], auto_res["alphabet_size"],
         dataset_name="BATADAL"
     )
 
-    # --- Parametre Duyarlılık ---
     print("Parametre duyarlılık grafikleri üretiliyor (BATADAL)...")
     visualize.plot_parameter_sensitivity(grid_results, dataset_name="BATADAL")
 
-    # --- Model Karşılaştırma (BATADAL) ---
     print("Model karşılaştırma grafikleri üretiliyor...")
     batadal_comparison = {
         "Automata": {"F1": auto_res["F1"], "Std": 0.0},
@@ -146,7 +200,6 @@ def main():
     }
     visualize.plot_model_comparison(batadal_comparison, dataset_name="BATADAL")
 
-    # --- Model Karşılaştırma (SKAB) ---
     skab_comparison = {
         "Automata": {"F1": skab_pipeline_res["automata"]["F1_Avg"], "Std": skab_pipeline_res["automata"]["F1_Std"]},
         "1D-CNN":   {"F1": skab_pipeline_res["cnn"]["F1_Avg"],      "Std": skab_pipeline_res["cnn"]["F1_Std"]},
