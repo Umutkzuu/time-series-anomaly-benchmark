@@ -2,6 +2,26 @@
 Görselleştirme Modülü
 Üretilen görseller: outputs/figures/ klasörüne kaydedilir.
 """
+"""
+Visualization Module for Time Series Anomaly Detection
+
+Bu modül, proje kapsamında elde edilen sonuçların görselleştirilmesi için
+yardımcı fonksiyonlar içerir. Üretilen tüm grafikler ve performans
+değerlendirme çıktıları outputs/figures/ klasörüne kaydedilir.
+
+Desteklenen görselleştirmeler:
+- Confusion Matrix
+- Transition Probability Heatmap
+- Automata State Diagram
+- Parameter Sensitivity Analysis
+- ROC Curve
+- Precision-Recall Curve
+- Model Performance Comparison
+
+Bu grafikler otomata tabanlı ve derin öğrenme tabanlı modellerin
+performanslarının analiz edilmesi ve karşılaştırılması amacıyla
+kullanılmaktadır.
+"""
 import os
 import numpy as np
 import matplotlib
