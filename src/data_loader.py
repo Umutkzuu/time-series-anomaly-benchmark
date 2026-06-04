@@ -4,7 +4,7 @@ import json
 import pandas as pd
 
 def load_config(config_file="config.json"):
-    """Merkezi konfigürasyon dosyasını dinamik yolla okur."""
+    
     current_dir = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(current_dir, config_file)
     
@@ -12,7 +12,7 @@ def load_config(config_file="config.json"):
         return json.load(file)
 
 def load_skab_data(config):
-    """SKAB veri setini yükler ve birleştirir."""
+    
     
     current_dir = os.path.dirname(os.path.abspath(__file__))
     base_dir = os.path.normpath(os.path.join(current_dir, config["data_paths"]["skab_base_dir"]))
