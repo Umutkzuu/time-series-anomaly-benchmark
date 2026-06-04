@@ -135,12 +135,12 @@ def run_skab_pipeline(skab_res, cfg):
     for fold_idx, (train_idx, test_idx) in enumerate(gkf.split(X_scaled, y_all, groups)):
         print(f"  [Fold {fold_idx + 1}/{n_splits}]", end=" ", flush=True)
 
-        # --- Veri bölme ---
+        
         X_tr_sc, X_te_sc = X_scaled[train_idx], X_scaled[test_idx]
         X_tr_pca, X_te_pca = X_pca[train_idx],  X_pca[test_idx]
         y_tr, y_te = y_all[train_idx], y_all[test_idx]
 
-        # Validation: test'in ilk %20'si
+        
         val_cut = max(1, int(len(X_te_sc) * 0.2))
         X_val_sc, X_test_sc = X_te_sc[:val_cut], X_te_sc[val_cut:]
         y_val,    y_test_f  = y_te[:val_cut],    y_te[val_cut:]
@@ -149,12 +149,12 @@ def run_skab_pipeline(skab_res, cfg):
             print("atlandı (test boş)")
             continue
 
-        # --- Otomata ---
+        
         auto_res = run_automata_pipeline("SKAB_FOLD", X_tr_pca, X_te_pca, y_tr, y_te, cfg)
         fold_results["automata"].append(auto_res["F1"])
         print(f"Automata F1={auto_res['F1']:.4f}", end=" | ", flush=True)
 
-        # --- DL modelleri ---
+        
         y_tr_dl  = (y_tr     == 1).astype(int)
         y_val_dl = (y_val    == 1).astype(int)
         y_te_dl  = (y_test_f == 1).astype(int)
