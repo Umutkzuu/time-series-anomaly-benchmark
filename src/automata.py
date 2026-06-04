@@ -70,9 +70,26 @@ def calculate_confidence(score, threshold):
     return min(99.99, confidence)
 def get_transitions_and_path_prob(sax_window, transition_matrix, alphabet_size):
     """
-    Verilen SAX penceresi (örn. ['d','a','e']) için:
-    - Ardışık durum geçişlerini ve olasılıklarını listeler
-    - Path probability = tüm geçiş olasılıklarının çarpımı
+    Bir SAX (Symbolic Aggregate Approximation) penceresi için
+    durum geçişlerini analiz eder ve ilgili geçiş olasılıklarını hesaplar.
+
+    Örneğin ['d', 'a', 'e'] dizisi için:
+
+    d -> a
+    a -> e
+
+    şeklindeki ardışık geçişler incelenir.
+
+     Fonksiyon:
+    - Her durum geçişinin olasılığını geçiş matrisi üzerinden alır.
+    - Geçişleri sıralı olarak listeler.
+        - Tüm geçiş olasılıklarının çarpımını hesaplayarak
+  ilgili pencerenin toplam yol olasılığını (path probability) üretir.
+
+       Düşük yol olasılığına sahip diziler,
+     normal davranıştan sapma gösteren potansiyel anomaliler
+       olarak değerlendirilebilir.
+    
     """
     char_to_idx = {chr(97 + i): i for i in range(alphabet_size)}
     transitions = []
