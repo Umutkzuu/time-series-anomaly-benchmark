@@ -148,9 +148,7 @@ def plot_state_diagram(transition_matrix, alphabet_size, dataset_name, top_n=12)
 # 4. Parametre Duyarlılık Grafikleri
 # ─────────────────────────────────────────────
 def plot_parameter_sensitivity(grid_results, dataset_name):
-    """
-    grid_results: [{"w_size": int, "a_size": int, "F1": float}, ...]
-    """
+    
     w_sizes = sorted(set(r["w_size"] for r in grid_results))
     a_sizes = sorted(set(r["a_size"] for r in grid_results))
 
