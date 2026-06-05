@@ -56,14 +56,14 @@ class TestLevenshteinDistance(unittest.TestCase):
 class TestUnseenPatterns(unittest.TestCase):
 
     def test_all_patterns_seen(self):
-        """Test pattern'ları eğitimde görüldüyse unseen listesi boş olmalı."""
+        
         train_seq = list("abcabc")
         test_seq  = list("abcabc")
         result = automata.evaluate_unseen_patterns(train_seq, test_seq, pattern_length=3)
         self.assertEqual(result, [])
 
     def test_all_patterns_unseen(self):
-        """Hiç örtüşmeyen test pattern'ları tamamen unseen sayılmalı."""
+       
         train_seq = list("aaabbb")
         test_seq  = list("cccddd")
         result = automata.evaluate_unseen_patterns(train_seq, test_seq, pattern_length=3)
