@@ -34,7 +34,7 @@ class TestLevenshteinDistance(unittest.TestCase):
         self.assertEqual(automata.levenshtein_distance("abc", "ab"), 1)
 
     def test_completely_different(self):
-        """Tamamen farklı iki string: mesafe = max uzunluk."""
+       
         self.assertEqual(automata.levenshtein_distance("abc", "xyz"), 3)
 
     def test_symmetry(self):
