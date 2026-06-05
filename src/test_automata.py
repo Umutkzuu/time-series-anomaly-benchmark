@@ -1,8 +1,4 @@
-"""
-Birim Testler: automata.py modülü
-Kapsam: levenshtein_distance, evaluate_unseen_patterns,
-        build_transition_matrix, get_transitions_and_path_prob
-"""
+
 import unittest
 import numpy as np
 import sys
