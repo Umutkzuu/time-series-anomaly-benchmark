@@ -106,7 +106,7 @@ class TestTransitionMatrix(unittest.TestCase):
         np.testing.assert_allclose(row_sums, np.ones(3), atol=1e-6)
 
     def test_no_zero_entries(self):
-        """Epsilon smoothing nedeniyle sıfır eleman olmamalı."""
+        
         seq = list("aaa")
         matrix = automata.build_transition_matrix(seq, alphabet_size=4)
         self.assertTrue(np.all(matrix > 0))
