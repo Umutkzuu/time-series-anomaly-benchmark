@@ -194,9 +194,7 @@ def plot_parameter_sensitivity(grid_results, dataset_name):
 # 5. ROC ve Precision-Recall Eğrileri
 # ─────────────────────────────────────────────
 def plot_roc_pr(y_true, y_scores, dataset_name, model_name):
-    """
-    y_scores: anomali olasılıkları (yüksek = anomali)
-    """
+    
     fig, axes = plt.subplots(1, 2, figsize=(11, 4))
 
     # ROC
