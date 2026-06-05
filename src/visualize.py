@@ -93,11 +93,11 @@ def plot_state_diagram(transition_matrix, alphabet_size, dataset_name, top_n=12)
     labels = [chr(97 + i) for i in range(alphabet_size)]
     n = alphabet_size
 
-    # Düğüm konumları — daire üzerinde
+    
     angles = np.linspace(0, 2 * np.pi, n, endpoint=False)
     pos = {labels[i]: (np.cos(angles[i]), np.sin(angles[i])) for i in range(n)}
 
-    # En yüksek top_n geçişi seç (öz-döngüler hariç)
+    
     edges = []
     for i in range(n):
         for j in range(n):
