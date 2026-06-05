@@ -110,11 +110,7 @@ def run_noise_experiment(X_train_pca, X_test_pca, y_train, y_test, cfg):
 
 
 def run_skab_pipeline(skab_res, cfg):
-    """
-    SKAB veri seti için GroupKFold tabanlı pipeline.
-    Her fold'da hem otomata hem de DL modelleri çalıştırılır.
-    Sonuçlar fold ortalaması ve standart sapması olarak raporlanır.
-    """
+   
     from sklearn.model_selection import GroupKFold
     import preprocessing
 

@@ -38,7 +38,7 @@ def main():
     auto_res = pipeline.run_automata_pipeline("BATADAL", X_train_pca, X_test_pca, y_train, y_test, cfg)
     print(f"Otomata F1-Score: {auto_res['F1']:.4f}")
     
-    print("\n--- JSON Açıklanabilirlik Raporları (İlk 3 Anomali) ---")
+    print("\n--- JSON Açıklanabilirlik Raporlari (İlk 3 Anomali) ---")
     for report in auto_res['Reports']:
         print(json.dumps(report, indent=4, ensure_ascii=False))
         
