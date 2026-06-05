@@ -45,11 +45,10 @@ class TestLevenshteinDistance(unittest.TestCase):
         )
 
     def test_sax_patterns(self):
-        """SAX pattern'larına özgü gerçekçi test durumları."""
-        # 1 karakter farkı
+       
         self.assertEqual(automata.levenshtein_distance("dae", "gae"), 1)
         self.assertEqual(automata.levenshtein_distance("aed", "acd"), 1)
-        # 2 karakter farkı
+        
         self.assertEqual(automata.levenshtein_distance("abc", "xyz"), 3)
         self.assertEqual(automata.levenshtein_distance("aab", "bbb"), 2)
 
