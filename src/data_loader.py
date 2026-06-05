@@ -36,7 +36,7 @@ def load_skab_data(config):
     return pd.concat(all_data, ignore_index=True)
 
 def load_batadal_data(config):
-    """BATADAL veri setini yükler."""
+    
     current_dir = os.path.dirname(os.path.abspath(__file__))
     filepath = os.path.normpath(os.path.join(current_dir, config["data_paths"]["batadal_file"]))
     
