@@ -226,9 +226,7 @@ def plot_roc_pr(y_true, y_scores, dataset_name, model_name):
 # 6. Model Karşılaştırma Bar Chart
 # ─────────────────────────────────────────────
 def plot_model_comparison(results_dict, dataset_name):
-    """
-    results_dict: {"ModelAdı": {"F1": float, "Std": float}, ...}
-    """
+    
     models = list(results_dict.keys())
     f1_vals = [results_dict[m]["F1"] for m in models]
     std_vals = [results_dict[m].get("Std", 0) for m in models]
