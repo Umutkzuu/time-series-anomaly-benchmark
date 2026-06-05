@@ -10,6 +10,7 @@ DEVICE = torch.device("mps" if torch.backends.mps.is_available() else "cuda" if 
 DECISION_THRESHOLD = 0.15
 warnings.filterwarnings('ignore')
 
+"""Improve deep learning models and anomaly detection workflow"""
 def set_seed(seed):
     torch.manual_seed(seed)
     np.random.seed(seed)
