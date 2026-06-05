@@ -38,7 +38,7 @@ class TestLevenshteinDistance(unittest.TestCase):
         self.assertEqual(automata.levenshtein_distance("abc", "xyz"), 3)
 
     def test_symmetry(self):
-        """Levenshtein mesafesi simetriktir: d(a,b) == d(b,a)."""
+       
         self.assertEqual(
             automata.levenshtein_distance("aab", "bba"),
             automata.levenshtein_distance("bba", "aab")
