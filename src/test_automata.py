@@ -11,16 +11,14 @@ import automata
 class TestLevenshteinDistance(unittest.TestCase):
 
     def test_identical_strings(self):
-        """Aynı iki string arasındaki mesafe 0 olmalı."""
+        
         self.assertEqual(automata.levenshtein_distance("abc", "abc"), 0)
 
     def test_empty_vs_nonempty(self):
-        """Boş string ile dolu string arasındaki mesafe, dolu stringin uzunluğu kadar olmalı."""
         self.assertEqual(automata.levenshtein_distance("", "abc"), 3)
         self.assertEqual(automata.levenshtein_distance("abc", ""), 3)
 
     def test_both_empty(self):
-        """İki boş string arasındaki mesafe 0 olmalı."""
         self.assertEqual(automata.levenshtein_distance("", ""), 0)
 
     def test_single_substitution(self):
