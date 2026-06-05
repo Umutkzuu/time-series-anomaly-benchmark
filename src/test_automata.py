@@ -72,7 +72,7 @@ class TestUnseenPatterns(unittest.TestCase):
     def test_unseen_returns_nearest(self):
         
         train_seq = list("abcabc")
-        test_seq  = list("abcabd")   # 'abd' unseen
+        test_seq  = list("abcabd")   # 'abd' nearest unseen pattern
         result = automata.evaluate_unseen_patterns(train_seq, test_seq, pattern_length=3)
         patterns_found = [r[0] for r in result]
         self.assertIn("abd", patterns_found)
@@ -86,7 +86,7 @@ class TestUnseenPatterns(unittest.TestCase):
             self.assertGreaterEqual(dist, 1)
 
     def test_empty_train(self):
-        """Eğitim sequence boşsa sonuç boş liste olmalı."""
+        
         result = automata.evaluate_unseen_patterns([], list("abc"), pattern_length=3)
         self.assertEqual(result, [])
 
