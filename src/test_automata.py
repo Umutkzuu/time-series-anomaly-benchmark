@@ -70,7 +70,7 @@ class TestUnseenPatterns(unittest.TestCase):
         self.assertGreater(len(result), 0)
 
     def test_unseen_returns_nearest(self):
-        """Her unseen pattern için en yakın eğitim pattern'ı dönmeli."""
+        
         train_seq = list("abcabc")
         test_seq  = list("abcabd")   # 'abd' unseen
         result = automata.evaluate_unseen_patterns(train_seq, test_seq, pattern_length=3)
@@ -78,7 +78,7 @@ class TestUnseenPatterns(unittest.TestCase):
         self.assertIn("abd", patterns_found)
 
     def test_unseen_levenshtein_distance_positive(self):
-        """Unseen pattern'ların Levenshtein mesafesi >= 1 olmalı."""
+        
         train_seq = list("abcabc")
         test_seq  = list("xyzxyz")
         result = automata.evaluate_unseen_patterns(train_seq, test_seq, pattern_length=3)
