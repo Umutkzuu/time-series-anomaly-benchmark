@@ -127,7 +127,7 @@ class TestTransitionMatrix(unittest.TestCase):
 class TestTransitionsAndPathProb(unittest.TestCase):
 
     def test_transitions_count(self):
-        """N uzunluklu pencerede N-1 geçiş olmalı."""
+        
         seq = list("abcabc")
         matrix = automata.build_transition_matrix(seq, alphabet_size=3)
         window = list("abc")
@@ -135,7 +135,7 @@ class TestTransitionsAndPathProb(unittest.TestCase):
         self.assertEqual(len(transitions), 2)  # a→b, b→c
 
     def test_path_probability_range(self):
-        """Path probability (0, 1] aralığında olmalı."""
+        
         seq = list("abcabc")
         matrix = automata.build_transition_matrix(seq, alphabet_size=3)
         window = list("abc")
@@ -144,7 +144,7 @@ class TestTransitionsAndPathProb(unittest.TestCase):
         self.assertLessEqual(path_prob, 1)
 
     def test_path_probability_is_product(self):
-        """Path probability, bireysel geçiş olasılıklarının çarpımına eşit olmalı."""
+        
         seq = list("abcabc")
         matrix = automata.build_transition_matrix(seq, alphabet_size=3)
         window = list("abc")
@@ -155,7 +155,7 @@ class TestTransitionsAndPathProb(unittest.TestCase):
         self.assertAlmostEqual(path_prob, round(expected, 10), places=8)
 
     def test_single_char_window(self):
-        """Tek karakterlik pencerede geçiş olmamalı, path_prob=1.0 olmalı."""
+        
         seq = list("abcabc")
         matrix = automata.build_transition_matrix(seq, alphabet_size=3)
         transitions, path_prob = automata.get_transitions_and_path_prob(["a"], matrix, 3)
