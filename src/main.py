@@ -28,9 +28,9 @@ def main():
     
     print("\n--- VERİ SETİ ANALİZİ (CLASS IMBALANCE) ---")
     anomali_orani = (y_train == 1).sum() / len(y_train)
-    print(f"Train anomali oranı: {anomali_orani:.4f}")
-    print(f"Normal/Anomali oranı: {(1-anomali_orani)/(anomali_orani+1e-9):.1f}:1")
-    print(f"Train anomali sayısı: {(y_train == 1).sum()} / {len(y_train)}\n")
+    print(f"Train anomali orani: {anomali_orani:.4f}")
+    print(f"Normal/Anomali orani: {(1-anomali_orani)/(anomali_orani+1e-9):.1f}:1")
+    print(f"Train anomali sayisi: {(y_train == 1).sum()} / {len(y_train)}\n")
     
     print("="*60)
     print(" BÖLÜM 1: OLASILIKSAL OTOMATA (EXPLAINABILITY) ")
