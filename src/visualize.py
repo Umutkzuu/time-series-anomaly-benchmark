@@ -89,10 +89,7 @@ def plot_transition_heatmap(transition_matrix, alphabet_size, dataset_name):
 # 3. Automata State Diagram
 # ─────────────────────────────────────────────
 def plot_state_diagram(transition_matrix, alphabet_size, dataset_name, top_n=12):
-    """
-    En yüksek olasılıklı top_n geçişi ok olarak çizer.
-    Durumlar daire üzerinde eşit açılarla yerleştirilir.
-    """
+   
     labels = [chr(97 + i) for i in range(alphabet_size)]
     n = alphabet_size
 
