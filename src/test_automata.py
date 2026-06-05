@@ -22,15 +22,15 @@ class TestLevenshteinDistance(unittest.TestCase):
         self.assertEqual(automata.levenshtein_distance("", ""), 0)
 
     def test_single_substitution(self):
-        """Tek karakter değişimi mesafesi 1 olmalı."""
+        
         self.assertEqual(automata.levenshtein_distance("abc", "aXc"), 1)
 
     def test_single_insertion(self):
-        """Tek karakter ekleme mesafesi 1 olmalı."""
+        
         self.assertEqual(automata.levenshtein_distance("ab", "abc"), 1)
 
     def test_single_deletion(self):
-        """Tek karakter silme mesafesi 1 olmalı."""
+       
         self.assertEqual(automata.levenshtein_distance("abc", "ab"), 1)
 
     def test_completely_different(self):
