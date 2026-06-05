@@ -112,10 +112,10 @@ class TestTransitionMatrix(unittest.TestCase):
         self.assertTrue(np.all(matrix > 0))
 
     def test_known_transition(self):
-        """a→b geçişi baskın olan sequence'de P(a→b) yüksek olmalı."""
+        
         seq = list("ababababab")
         matrix = automata.build_transition_matrix(seq, alphabet_size=3)
-        # a=0, b=1
+        
         self.assertGreater(matrix[0, 1], 0.5)
 
 
