@@ -70,6 +70,7 @@ def calculate_confidence(score, threshold):
     return min(99.99, confidence)
 def get_transitions_and_path_prob(sax_window, transition_matrix, alphabet_size):
     """
+    Açıklama örneği:
     Bir SAX (Symbolic Aggregate Approximation) penceresi için
     durum geçişlerini analiz eder ve ilgili geçiş olasılıklarını hesaplar.
 
