@@ -95,7 +95,12 @@ class TestUnseenPatterns(unittest.TestCase):
         result = automata.evaluate_unseen_patterns(list("ab"), list("ab"), pattern_length=3)
         self.assertEqual(result, [])
 
+        """Geçiş matrisi oluşturma fonksiyonunun doğruluğunu test eder.
 
+         Test edilen durumlar:
+        - Her satırın toplamının 1 olması (normalizasyon kontrolü)
+        - Epsilon smoothing sonrası sıfır olasılık kalmaması
+        - Beklenen geçişlerin yüksek olasılıkla öğrenilmesi"""
 class TestTransitionMatrix(unittest.TestCase):
 
     def test_rows_sum_to_one(self):
