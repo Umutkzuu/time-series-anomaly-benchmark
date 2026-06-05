@@ -7,7 +7,16 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 import automata
 
+"""Levenshtein mesafesi hesaplama fonksiyonunun doğruluğunu test eder.
 
+    Test edilen durumlar:
+    - Aynı stringler
+    - Boş ve dolu stringler
+    - Karakter ekleme, silme ve değiştirme işlemleri
+    - Tamamen farklı stringler
+    - Simetri özelliği (d(a,b) = d(b,a))
+    - SAX pattern'larına ait gerçekçi örnekler
+"""
 class TestLevenshteinDistance(unittest.TestCase):
 
     def test_identical_strings(self):
