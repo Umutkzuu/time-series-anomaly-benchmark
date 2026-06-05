@@ -60,8 +60,15 @@ class TestLevenshteinDistance(unittest.TestCase):
         
         self.assertEqual(automata.levenshtein_distance("abc", "xyz"), 3)
         self.assertEqual(automata.levenshtein_distance("aab", "bbb"), 2)
+""" Eğitim verisinde görülmeyen (unseen) pattern'ların tespit edilmesini test eder.
 
-
+    Test edilen durumlar:
+    - Tüm pattern'ların eğitim verisinde bulunması
+    - Tüm pattern'ların eğitim verisinde bulunmaması
+    - Unseen pattern için en yakın eğitim pattern'ının döndürülmesi
+    - Levenshtein mesafesinin pozitif olması
+    - Boş eğitim verisi durumu
+    - Pattern uzunluğundan kısa sequence durumu"""
 class TestUnseenPatterns(unittest.TestCase):
 
     def test_all_patterns_seen(self):
