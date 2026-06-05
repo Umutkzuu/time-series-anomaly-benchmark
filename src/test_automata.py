@@ -99,7 +99,7 @@ class TestUnseenPatterns(unittest.TestCase):
 class TestTransitionMatrix(unittest.TestCase):
 
     def test_rows_sum_to_one(self):
-        """Her satırın toplamı 1 (normalize) olmalı."""
+        
         seq = list("abcabcabc")
         matrix = automata.build_transition_matrix(seq, alphabet_size=3)
         row_sums = matrix.sum(axis=1)
