@@ -91,7 +91,7 @@ class TestUnseenPatterns(unittest.TestCase):
         self.assertEqual(result, [])
 
     def test_short_sequence(self):
-        """Pattern uzunluğundan kısa sequence'da pattern çıkarılamamalı."""
+        
         result = automata.evaluate_unseen_patterns(list("ab"), list("ab"), pattern_length=3)
         self.assertEqual(result, [])
 
